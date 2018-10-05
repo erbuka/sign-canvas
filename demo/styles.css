@@ -1,0 +1,13 @@
+body,html {
+    height: 100%;
+    font-family: 'Roboto',sans-serif;
+}
+
+canvas#sign-canvas {
+    width: 100%;
+    display: block
+}
+
+.sc-canvas-container {
+    width: 50%;
+}
