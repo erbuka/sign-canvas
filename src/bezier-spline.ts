@@ -21,10 +21,9 @@ export class BezierSpline {
     public penSize: number = 4;
     public penColor: Color = new Color(0, 0, 0);
 
-    private _directions: Vector[] = [];
-    private _intervals: Interval[] = [];
+    private _penVelocity = 0;
+
     private _points: Vector[] = [];
-    private _length = 0;
 
     private _vt0 = new Vector();
     private _vt1 = new Vector();
@@ -36,9 +35,7 @@ export class BezierSpline {
     private _vt6 = new Vector();
     private _vt7 = new Vector();
 
-    get length(): number { return this._length; }
-
-    get penSizeFast(): number { return this.penSize * 0.3; }
+    get penSizeFast(): number { return this.penSize * 0.35; }
 
     constructor() {
 
@@ -52,90 +49,75 @@ export class BezierSpline {
 
         this._points.push(p);
 
-        if (this._points.length >= 2) {
-            let p0 = this._points[this._points.length - 2];
-            let p1 = this._points[this._points.length - 1];
-            let dist = p0.distance(p1);
-            this._intervals.push(new Interval(this._length, this._length + dist));
-            this._directions.push(p1.sub(p0).normalized());
-            this._length += dist;
+        if (this._points.length > 4) {
+            this._points.shift();
         }
     }
 
+    draw(ctx: CanvasRenderingContext2D) {
 
+        // We draw only if we have enough points(4)
+        if (this._points.length < 4)
+            return;
 
-    sample(t: number, out: Vector = null): Vector {
+        // Init the data required to build the curve
+        let directions: Vector[] = [];
+        let intervals: Interval[] = [];
 
-        let v = out || new Vector();
+        for (let i = 0; i < this._points.length - 1; i++) {
+            let p0 = this._points[i];
+            let p1 = this._points[i + 1];
 
-        let p0 = this._vt0;
-        let p1 = this._vt1;
-        let p2 = this._vt2;
-        let p3 = this._vt3;
-
-        for (let i = 0; i < this._intervals.length; i++) {
-            let interval = this._intervals[i];
-            if (interval.inside(t)) {
-                let k = (t - interval.start) / interval.length;
-                let l3 = interval.length / 3;
-                p0.copy(this._points[i])
-                p3.copy(this._points[i + 1]);
-
-                if (i === 0) { // first interval
-                    p1.copy(this._directions[i]).setScale(l3).setAdd(p0);
-                } else {
-                    p1.copy(this._directions[i]).setAdd(this._directions[i - 1]).setNormalized().setScale(l3).setAdd(p0);
-                }
-
-
-                if (i === this._intervals.length - 1) { // last interval
-                    p2.copy(this._directions[i]).setScale(-l3).setAdd(p3);
-                } else {
-                    p2.copy(this._directions[i]).setAdd(this._directions[i + 1]).setNormalized().setScale(-l3).setAdd(p3);
-                }
-
-                return this._evalCubicBezier(k, p0, p1, p2, p3, v);
-            }
+            intervals.push(new Interval(0, p0.distance(p1)));
+            directions.push(p1.sub(p0).setNormalized());
         }
 
-        return v;
+        let l3 = intervals[1].length / 3;
 
-    }
-
-    draw(ctx: CanvasRenderingContext2D): void {
+        // Create the curve
+        let p0 = this._vt0.copy(this._points[1]); // first point
+        let p3 = this._vt3.copy(this._points[2]); // last point
+        // Mid points
+        let p1 = this._vt1.copy(directions[1]).setAdd(directions[0]).setNormalized().setScale(l3).setAdd(p0);
+        let p2 = this._vt2.copy(directions[1]).setAdd(directions[2]).setNormalized().setScale(-l3).setAdd(p3);
         let v = new Vector();
 
-        let maxVelocity = this.penSize * 400;
-
-        ctx.fillStyle = this.penColor.toCSSColor();
-
-        for (let i = 0; i < this._intervals.length; i++) {
-            let interval = this._intervals[i];
-            let step = this.penSizeFast / 4;
-
-            let prevPenSize = i === 0 ? this.penSize : this._penSize(this._intervalVelocity(i - 1), maxVelocity);
-            //let endPenSize = i === this._intervals.length - 1 ? this.penSizeFast : this._penSize(this._intervalVelocity(i + 1), maxVelocity);
-            let currentPenSize = this._penSize(this._intervalVelocity(i), maxVelocity);
+        let maxPenVelocity = this.penSize * 400;
+        let targetVelocity = this._intervalVelocity(intervals, 1);
+        let velocityStep = maxPenVelocity / 10;
 
 
-            for (let t = interval.start; t <= interval.end; t += step) {
-                let k = interval.length / (interval.end - interval.start);
-                //let penSize = (1 - k) * startPenSize + k * endPenSize;
-                let penSize = prevPenSize * 0.7 + currentPenSize * 0.3;
+        let step = this.penSize / 3;
 
-                this.sample(t, v);
+        ctx.fillStyle = "#000";
 
-                ctx.beginPath();
-                ctx.arc(v.x, v.y, penSize, 0, 2 * Math.PI);
-                ctx.fill();
-            }
+        for (let t = intervals[1].start; t < intervals[1].length; t += step) {
+            let k = (t - intervals[1].start) / intervals[1].length;
+
+            this._evalCubicBezier(k, p0, p1, p2, p3, v);
+
+            this._penVelocity = this._moveTowards(targetVelocity, this._penVelocity, velocityStep);
+            let penSize = this._calcPenSize(this._penVelocity, maxPenVelocity);
+
+            ctx.beginPath();
+            ctx.arc(v.x, v.y, penSize, 0, 2 * Math.PI);
+            ctx.fill();
         }
     }
 
-    private _intervalVelocity(idx: number): number {
-        return this._intervals[idx].length / ((this._points[idx + 1].time - this._points[idx].time) / 1000);
+    _moveTowards(target: number, value: number, step: number): number {
+        step = Math.abs(step);
+        let dir = (target - value) / Math.abs(target - value);
+
+        return dir > 0 ?
+            Math.min(value + step, target) :
+            Math.max(value - step, target);
     }
 
+
+    private _intervalVelocity(intervals: Interval[], idx: number): number {
+        return intervals[idx].length / ((this._points[idx + 1].time - this._points[idx].time) / 1000);
+    }
 
     private _evalCubicBezier(t: number, p0: Vector, p1: Vector, p2: Vector, p3: Vector, out: Vector): Vector {
         let v = out || new Vector();
@@ -159,10 +141,10 @@ export class BezierSpline {
     }
 
     private _tooClose(p0: Vector, p1: Vector): boolean {
-        return p0.squaredDistance(p1) <= (this.penSize * 100);
+        return p0.squaredDistance(p1) <= this.penSize;
     }
 
-    private _penSize(vel: number, maxVel: number): number {
+    private _calcPenSize(vel: number, maxVel: number): number {
         vel = Math.min(vel, maxVel);
         let t = vel / maxVel;
         return (1 - t) * this.penSize + t * this.penSizeFast;
