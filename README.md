@@ -1,5 +1,6 @@
 # Sign-Canvas
-HTML Canvas for handwritten signature input. Supports both mouse and touch devices.
+HTML Canvas for handwritten signature input.
+Curve aproximation done with a cubic Beziér spline (see implementation for details on how the curve is constructed) and the movement speed affects the brush size trying to mimic a real pen.
 
 ## How to use
 Check out the demo under the "demo" folder.
