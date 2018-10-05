@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script language="javascript" src="sign-canvas.js"></script>
+    <script language="javascript">
+        window.addEventListener("load", function () {
+            var signCanvas = new sc.SignCanvas(document.getElementById("canvas"));
+        });
+    </script>
+</head>
+
+<body>
+    <canvas id="canvas" style="width:100%;border:1px solid #000; display: block;">
+
+    </canvas>
+</body>
+
+</html>
