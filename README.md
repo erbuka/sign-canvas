@@ -2,8 +2,12 @@
 HTML Canvas for handwritten signature input. Supports both mouse and touch devices.
 
 ## How to use
-Check out the demo.
+Check out the demo under the "demo" folder.
 
 ## Build
-Open the root folder with Visual Studio Code and run task "build". The process will create normal and minified version under the folder 
-"build".
+Open the root folder with Visual Studio Code and run task **build**. The process will create normal and minified version under the folder 
+"build". If you don't use the visual studio code, run the following commands:
+- **normal**: browserify ./src/index.ts -p [ tsify ] > ./build/sign-canvas.js
+- **minified**: browserify ./src/index.ts -p [ tsify ] | uglifyjs > ./build/sign-canvas.min.js
+Requires **browserify** and **tsify** (and **uglifyjs** for the minified version).
+
