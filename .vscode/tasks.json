@@ -6,7 +6,7 @@
         {
             "label": "build",
             "type": "shell",
-            "command": "browserify ./src/index.ts -p [ tsify ] > ./build/sign-canvas.js; browserify ./src/index.ts -p [ tsify ] | uglifyjs > ./build/sign-canvas.min.js",
+            "command": "browserify ./src/index.ts -p [ tsify ] > ./build/sign-canvas.js & browserify ./src/index.ts -p [ tsify ] | uglifyjs > ./build/sign-canvas.min.js",
             "group": {
                 "kind": "build",
                 "isDefault": true

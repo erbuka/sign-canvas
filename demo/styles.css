@@ -10,4 +10,5 @@ canvas#sign-canvas {
 
 .sc-canvas-container {
     width: 50%;
+    min-width: 300px;
 }
