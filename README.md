@@ -8,8 +8,8 @@ There's a sample usage under the "demo" folder. You can try it [here](https://er
 ## Build
 Open the root folder with Visual Studio Code and run task **build**. The process will create normal and minified version under the folder 
 "build". If you don't use the visual studio code, run the following commands:
-- **normal**: browserify ./src/index.ts -p [ tsify ] > ./build/sign-canvas.js
-- **minified**: browserify ./src/index.ts -p [ tsify ] | uglifyjs > ./build/sign-canvas.min.js
+- **normal**: `browserify ./src/index.ts -p [ tsify ] > ./build/sign-canvas.js`
+- **minified**: `browserify ./src/index.ts -p [ tsify ] | uglifyjs > ./build/sign-canvas.min.js`
 
 Requires **browserify** and **tsify** (and **uglifyjs** for the minified version).
 
