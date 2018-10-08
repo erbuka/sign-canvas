@@ -74,7 +74,12 @@ export class SignCanvas {
                 addPoint(new Vector(evt.offsetX, evt.offsetY));
             }
         });
-        this.canvas.addEventListener("mouseup", (evt: MouseEvent) => { mouseDown = false; endCurve(new Vector(evt.offsetX, evt.offsetY)); });
+        this.canvas.addEventListener("mouseup", (evt: MouseEvent) => {
+            if (mouseDown) {
+                mouseDown = false;
+                endCurve(new Vector(evt.offsetX, evt.offsetY));
+            }
+        });
 
         window.addEventListener("resize", this._resize.bind(this));
 

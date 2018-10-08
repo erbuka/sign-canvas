@@ -1,7 +1,7 @@
 {
   "name": "sign-canvas",
   "version": "1.0.0",
-  "description": "HTML Canvas for reading signatures",
+  "description": "HTML Canvas for handwritten signatures",
   "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
